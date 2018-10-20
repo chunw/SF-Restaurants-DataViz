@@ -1,8 +1,8 @@
 // Settings
-const LOW_RISK_COLOR = '#61A466';
+const LOW_RISK_COLOR = '#B3CD60';
 const MODERATE_RISK_COLOR = '#EE9D56';
 const HIGH_RISK_COLOR = '#D9493A';
-const NO_DATA_RISK_COLOR = '#5C7A99';
+const NO_DATA_RISK_COLOR = '#61A466';
 const DATA_PT_RADIUS = 2;
 
 var mapWidth = 750;
@@ -66,8 +66,15 @@ d3.csv("/data/restaurant_scores.csv").then(function(data) {
     }
   })
   .on('mouseover', function(d) {
-    return tooltip.style("visibility", "visible").text(
-      d.business_name
+    const color = getRiskColor(d);
+    return tooltip.style("visibility", "visible").html(
+      `<div>
+        <div>
+          <span style="color: ${color}; font-weight: bold">${d.business_name}</span>
+          <span style="color: #D3D3D3"> | </span>
+          <span style="color: white;">Inspection Score: ${d.inspection_score}</span>
+        </div>
+      </div>`
     );
   })
   .on('mousemove', function() {
@@ -117,4 +124,17 @@ function setupLegend() {
   document.getElementById("Low_Risk_COUNT").innerHTML = countLowRisk;
   document.getElementById("Moderate_Risk_COUNT").innerHTML = countModerateRisk;
   document.getElementById("High_Risk_COUNT").innerHTML = countHighRisk;
+}
+
+function getRiskColor(d) {
+  switch (d.risk_category) {
+    case "Low Risk":
+      return LOW_RISK_COLOR;
+    case "Moderate Risk":
+      return MODERATE_RISK_COLOR;
+    case "High Risk":
+      return HIGH_RISK_COLOR;
+    default:
+      return NO_DATA_RISK_COLOR;
+  }
 }
