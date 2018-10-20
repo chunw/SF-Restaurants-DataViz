@@ -4,10 +4,67 @@
   <meta charset="utf-8">
   <title>San Francisco Restaurants</title>
   <script src="https://d3js.org/d3.v5.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <style>
+  .section {
+    display: inline-block;
+    vertical-align: top;
+    width: 48%;
+  }
+  .tooltip {
+      position: absolute;
+      z-index: 10;
+      visibility: hidden;
+      background-color: #0f0f0f;
+      text-align: center;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: bold;
+      color: #ffffff;
+  }
+  .checkbox-group {
+    margin-left: 15%;
+    transform: scale(0.8);
+  }
+  [type="checkbox"].filled-in:checked+span:not(.lever):after {
+    border: 2px solid black;
+    background-color: black;
+  }
+  </style>
 </head>
 
 <body>
-
+  <div id="svg" class="section">
+  </div>
+  <div class="section">
+    <div class="checkbox-group">
+      <p>
+        <label>
+          <input type="checkbox" class="filled-in" checked="checked" onclick="toggleData(this)"/>
+          <span id='No_Risk_Data'>No Risk Data (<span id="No_Risk_Data_COUNT"></span>)</span>
+        </label>
+      </p>
+      <p>
+        <label>
+          <input type="checkbox" class="filled-in" checked="checked" onclick="toggleData(this, 'Low')"/>
+          <span id='Low_Risk'>Low Risk (<span id="Low_Risk_COUNT"></span>)</span>
+        </label>
+      </p>
+      <p>
+        <label>
+          <input type="checkbox" class="filled-in" checked="checked" onclick="toggleData(this, 'Moderate')"/>
+          <span id='Moderate_Risk'>Moderate Risk (<span id="Moderate_Risk_COUNT"></span>)</span>
+        </label>
+      </p>
+      <p>
+        <label>
+          <input type="checkbox" class="filled-in" checked="checked" onclick="toggleData(this, 'High')"/>
+          <span id='High_Risk'>High Risk (<span id="High_Risk_COUNT"></span>)</span>
+        </label>
+      </p>
+    </div>
+  </div>
   <script src="js/scripts.js"></script>
 </body>
 </html>

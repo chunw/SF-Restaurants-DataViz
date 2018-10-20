@@ -1,32 +1,39 @@
-// Set up size
+// Settings
+const LOW_RISK_COLOR = '#61A466';
+const MODERATE_RISK_COLOR = '#EE9D56';
+const HIGH_RISK_COLOR = '#D9493A';
+const NO_DATA_RISK_COLOR = '#5C7A99';
+const DATA_PT_RADIUS = 2;
+
 var mapWidth = 750;
 var mapHeight = 750;
+var csvData;
+var countLowRisk = 0;
+var countModerateRisk = 0;
+var countHighRisk = 0;
+var countNoRiskData = 0;
 
-// Set up projection that the map is using
 var projection = d3.geoMercator()
   .center([-122.433701, 37.767683]) // San Francisco, roughly
   .scale(225000)
   .translate([mapWidth / 2, mapHeight / 2]);
 
-// This is the mapping between <longitude, latitude> position to <x, y> pixel position on the map
-// projection is a function and it has an inverse:
-// projection([lon, lat]) returns [x, y]
-// projection.invert([x, y]) returns [lon, lat]
-
-// Add an SVG element to the DOM
-var svg = d3.select('body').append('svg')
+var svg = d3.select('#svg').append('svg')
   .attr('width', mapWidth)
   .attr('height', mapHeight);
 
-// Add SVG map at correct size, assuming map is saved in a subdirectory called `data`
+var tooltip = d3.select("body")
+  .append("div")
+  .attr('class', 'tooltip');
+
 svg.append('image')
   .attr('width', mapWidth)
   .attr('height', mapHeight)
   .attr('xlink:href', 'data/sf-map.svg');
 
 d3.csv("/data/restaurant_scores.csv").then(function(data) {
-	console.log(data);
-  svg.selectAll("circle")
+  csvData = data;
+  const circles = svg.selectAll("circle")
   .data(data)
   .enter()
   .append("circle")
@@ -38,29 +45,76 @@ d3.csv("/data/restaurant_scores.csv").then(function(data) {
     var projectedLocation = projection([d.business_longitude, d.business_latitude]);
     return projectedLocation[1];
   })
-  .attr('r', 1)
-  .style("fill", "blue");
+  .attr('r', DATA_PT_RADIUS)
+  .attr('class', d => {
+    return d.risk_category ? d.risk_category : "NO_RISK_DATA";
+  })
+  .style('fill', d => {
+    switch (d.risk_category) {
+      case "Low Risk":
+        countLowRisk++;
+        return LOW_RISK_COLOR;
+      case "Moderate Risk":
+        countModerateRisk++;
+        return MODERATE_RISK_COLOR;
+      case "High Risk":
+        countHighRisk++;
+        return HIGH_RISK_COLOR;
+      default:
+        countNoRiskData++;
+        return NO_DATA_RISK_COLOR;
+    }
+  })
+  .on('mouseover', function(d) {
+    return tooltip.style("visibility", "visible").text(
+      d.business_name
+    );
+  })
+  .on('mousemove', function() {
+   return tooltip
+     .style("top", (event.pageY - 30) + "px")
+     .style("left", event.pageX + "px");
+  })
+  .on('mouseout', function() {
+    return tooltip.style("visibility", "hidden");
+  });
+
+  setupLegend();
 });
-/*
-var projectedLocation = projection([business_longitude, business_latitude]);
-var circle = svg.append('circle')
-    .attr('cx', projectedLocation[0])
-    .attr('cy', projectedLocaiton[1])
-    .attr('r', 1);
 
+function toggleData(checkbox, category=null) {
+  if (category) {
+    category += " Risk";
+  } else {
+    category = "NO_RISK_DATA";
+  }
+  const selection = document.getElementsByClassName(category);
+  if (checkbox.checked) {
+    render(selection);
+  } else {
+    hide(selection);
+  }
+}
 
+function render(selection) {
+  Array.from(selection).forEach(d => {
+    d.style.display = "block";
+  })
+}
 
-const circles =
-svg.selectAll("circle")
-.data(circle_position_data)
-.enter()
-.append("circle")
-.attr("cx", d => d.x)
-.attr("cy", d => d.y)
-.attr("r", 55)
-.style("fill", "blue");
-var projectedLocation = projection([business_longitude, business_latitude]);
-var circle = svg.append('circle')
-    .attr('cx', projectedLocation[0])
-    .attr('cy', projectedLocaiton[1])
-    .attr('r', 1);*/
+function hide(selection) {
+  Array.from(selection).forEach(d => {
+    d.style.display = "none";
+  })
+}
+
+function setupLegend() {
+  document.getElementById("No_Risk_Data").style.color = NO_DATA_RISK_COLOR;
+  document.getElementById("Low_Risk").style.color = LOW_RISK_COLOR;
+  document.getElementById("Moderate_Risk").style.color = MODERATE_RISK_COLOR;
+  document.getElementById("High_Risk").style.color = HIGH_RISK_COLOR;
+  document.getElementById("No_Risk_Data_COUNT").innerHTML = countNoRiskData;
+  document.getElementById("Low_Risk_COUNT").innerHTML = countLowRisk;
+  document.getElementById("Moderate_Risk_COUNT").innerHTML = countModerateRisk;
+  document.getElementById("High_Risk_COUNT").innerHTML = countHighRisk;
+}
