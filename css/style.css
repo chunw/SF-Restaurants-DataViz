@@ -1,0 +1,46 @@
+.selection, .selection1, .selection2 {
+  stroke          : gray;
+  stroke-width    : 1px;
+}
+
+.selection {
+  fill            : transparent;
+  stroke-dasharray: 5px;
+}
+
+.selection1 {
+  fill            : purple;
+  opacity         : 0.1;
+}
+
+.selection2 {
+  fill            : yellow;
+  opacity         : 0.1;
+}
+
+.section {
+  display: inline-block;
+  vertical-align: top;
+  width: 48%;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 10;
+  visibility: hidden;
+  background-color: #0f0f0f;
+  text-align: center;
+  padding: 4px 12px;
+  border-radius: 4px;
+  color: #ffffff;
+}
+
+.checkbox-group {
+  margin-left: 15%;
+  transform: scale(0.8);
+}
+
+[type="checkbox"].filled-in:checked+span:not(.lever):after {
+  border: 2px solid black;
+  background-color: black;
+}
