@@ -23,3 +23,44 @@ svg.append('image')
   .attr('width', mapWidth)
   .attr('height', mapHeight)
   .attr('xlink:href', 'data/sf-map.svg');
+
+d3.csv("/data/restaurant_scores.csv").then(function(data) {
+	console.log(data);
+  svg.selectAll("circle")
+  .data(data)
+  .enter()
+  .append("circle")
+  .attr("cx", d => {
+    var projectedLocation = projection([d.business_longitude, d.business_latitude]);
+    return projectedLocation[0];
+  })
+  .attr("cy", d => {
+    var projectedLocation = projection([d.business_longitude, d.business_latitude]);
+    return projectedLocation[1];
+  })
+  .attr('r', 1)
+  .style("fill", "blue");
+});
+/*
+var projectedLocation = projection([business_longitude, business_latitude]);
+var circle = svg.append('circle')
+    .attr('cx', projectedLocation[0])
+    .attr('cy', projectedLocaiton[1])
+    .attr('r', 1);
+
+
+
+const circles =
+svg.selectAll("circle")
+.data(circle_position_data)
+.enter()
+.append("circle")
+.attr("cx", d => d.x)
+.attr("cy", d => d.y)
+.attr("r", 55)
+.style("fill", "blue");
+var projectedLocation = projection([business_longitude, business_latitude]);
+var circle = svg.append('circle')
+    .attr('cx', projectedLocation[0])
+    .attr('cy', projectedLocaiton[1])
+    .attr('r', 1);*/
