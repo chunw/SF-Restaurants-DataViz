@@ -24,6 +24,11 @@
   width: 48%;
 }
 
+.section.right {
+  padding-right: 18px;
+  padding-left: 100px;
+}
+
 .tooltip {
   position: absolute;
   z-index: 10;
@@ -36,11 +41,49 @@
 }
 
 .checkbox-group {
-  margin-left: 15%;
+  margin-left: -54px;
   transform: scale(0.8);
+}
+
+.result-list-info {
+  font-size: 13px;
+}
+
+#result-list .title {
+  font-family: sans-serif;
+}
+
+#result-list .content {
+  color: #8c8c8c;
+  display: inline-block;
+  font-size: 13px;
+  line-height: 16px;
+}
+
+#result-list .phone {
+  font-size: 0.8em;
+}
+
+#result-list .violation {
+  font-size: 0.8em;
+  color: #000000;
+  font-weight: 100;
+}
+
+#result-list .violation .title {
+  font-weight: 400;
+  font-size: 1em;
 }
 
 [type="checkbox"].filled-in:checked+span:not(.lever):after {
   border: 2px solid black;
   background-color: black;
+}
+
+.collection .collection-item.avatar .secondary-content {
+  top: 10px;
+}
+
+.collection .collection-item.avatar {
+  padding-left: 24px;
 }

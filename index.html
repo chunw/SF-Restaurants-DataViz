@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>San Francisco Restaurants</title>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
@@ -12,7 +13,7 @@
 <body>
   <div id="svg" class="section">
   </div>
-  <div class="section">
+  <div class="section right">
     <div class="checkbox-group">
       <p>
         <label>
@@ -39,6 +40,9 @@
         </label>
       </p>
     </div>
+    <div class="result-list-info">Filtered (<span id="filter-count">0</span>):</div>
+    <ul class="collection" id="result-list">
+    </ul>
   </div>
   <script src="js/scripts.js"></script>
 </body>

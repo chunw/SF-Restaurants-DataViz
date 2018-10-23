@@ -5,15 +5,19 @@ const HIGH_RISK_COLOR = '#D9493A';
 const NO_DATA_RISK_COLOR = '#61A466';
 const DATA_PT_RADIUS = 2;
 const RESET_RADIUS = 5;
+const mapWidth = 750;
+const mapHeight = 750;
 
-var mapWidth = 750;
-var mapHeight = 750;
 var csvData;
+var filteredData = [];
 var countLowRisk = 0;
 var countModerateRisk = 0;
 var countHighRisk = 0;
 var countNoRiskData = 0;
 var selectionFrameId = 1;
+
+// Init Materialize components
+M.AutoInit();
 
 // SF map projection
 var projection = d3.geoMercator()
@@ -63,9 +67,11 @@ svg.on( 'mousedown', function() {
     const r = parseInt(s.attr( "r"), 10);
     if (r < RESET_RADIUS){
       // Reset the visualization
-      svg.selectAll("circle.Restaurant").style("visibility", "visible");
+      svg.selectAll("circle.Restaurant").style("fill", d => getRiskColor(d));
       svg.selectAll("circle.selection1").remove();
       svg.selectAll("circle.selection2").remove();
+
+      clearResultList();
     } else {
       // Prepare for filtering
       svg.append("circle")
@@ -120,11 +126,9 @@ d3.csv("/data/restaurant_scores.csv").then(function(data) {
     const color = getRiskColor(d);
     return tooltip.style("visibility", "visible").html(
       `<div>
-        <div>
-          <span style="color: ${color}; font-weight: bold">${d.business_name}</span>
-          <span style="color: #D3D3D3"> | </span>
-          <span style="color: white;">Inspection Score: ${d.inspection_score}</span>
-        </div>
+        <span style="color: ${color}; font-weight: bold">${d.business_name}</span>
+        <span style="color: #D3D3D3"> | </span>
+        <span style="color: white;">Inspection Score: ${d.inspection_score}</span>
       </div>`
     );
   })
@@ -153,6 +157,7 @@ function toggleData(checkbox, category=null) {
   } else {
     hide(selection);
   }
+
 }
 
 function render(selection) {
@@ -196,26 +201,71 @@ function distance(a, b){
 }
 
 function filterToIntersection() {
+  filteredData = [];
   var A = svg.select("circle.selection1");
   var B = svg.select("circle.selection2");
   if (!A.empty() && !B.empty()) {
     svg.selectAll("circle.Restaurant")
-    .style("visibility", function(d) {
+    .style("fill", function(d) {
       const A_center = [parseInt(A.attr("cx"), 10), parseInt(A.attr("cy"), 10)]
       const A_r = parseInt(A.attr( "r"), 10);
       const B_center = [parseInt(B.attr("cx"), 10), parseInt(B.attr("cy"), 10)]
       const B_r = parseInt(B.attr( "r"), 10);
       const projectedLocation = projection([d.business_longitude, d.business_latitude]);
       if (distance(A_center, projectedLocation) < A_r && distance(B_center, projectedLocation) < B_r) {
-        return "visible";
+        filteredData.push(d);
+        return getRiskColor(d);
       } else {
-        return "hidden";
+        return "#dbd9d9";
       }
     });
+    updateFilteredListInView(dedupRestaurants(filteredData));
   }
+}
+
+function updateFilteredListInView(data) {
+  // sort data by score
+  data = data.sort(function(a, b){return b.inspection_score - a.inspection_score});
+
+  const container = $("#result-list");
+  template = ``;
+  $("#filter-count").text(data.length);
+  data.forEach(d => {
+    template +=
+    `<li class="collection-item avatar">
+        <span class="title">${d.business_name}</span>
+        <p>
+          <span class="content address">${d.business_address} </span><br>
+          <span class="content violation"><span class="title">Inspection Score:</span> ${d.inspection_score} (inspected on: ${d.inspection_date || "N/A"})</span><br>
+          <span class="content violation"><span class="title">Violation:</span> ${d.violation_description || "No violation found"}</span>
+        </p>
+        <span class="secondary-content" style="color:${getRiskColor(d)}"><i class="material-icons">${d.risk_category || "No risk"}</i></span>
+      </li>
+    `
+  });
+  container.html(template);
+}
+
+function clearResultList() {
+  $("#filter-count").text(0);
+  const container = $("#result-list");
+  container.html(``);
+}
+
+function dedupRestaurants(restaurants) {
+  return Array.from(restaurants.reduce((m, t) => m.set(t.business_id, t), new Map()).values());
+}
+
+function formatPhoneNum(phone) {
+    phone = phone.replace(/[^\d]/g, "");
+    //check if number length equals to 10
+    if (phone.length == 11) {
+        //reformat and return phone number in format (234) 567-8900
+        return phone.substr(1).replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
+    }
+    return null;
 }
 
 function updateFrameId() {
   selectionFrameId = (selectionFrameId++)%2+1;
 }
-
