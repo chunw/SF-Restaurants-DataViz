@@ -75,6 +75,10 @@
   font-size: 1em;
 }
 
+#result-list .material-icons {
+  font-size: 14px;
+}
+
 [type="checkbox"].filled-in:checked+span:not(.lever):after {
   border: 2px solid black;
   background-color: black;
