@@ -258,24 +258,8 @@ function countDataByRiskCategory(data) {
   return [countLowRisk, countModerateRisk, countHighRisk, countNoRiskData];
 }
 
-function clearResultList() {
-  $("#filter-count").text(0);
-  const container = $("#result-list");
-  container.html(``);
-}
-
 function dedupRestaurants(restaurants) {
   return Array.from(restaurants.reduce((m, t) => m.set(t.business_id, t), new Map()).values());
-}
-
-function formatPhoneNum(phone) {
-    phone = phone.replace(/[^\d]/g, "");
-    //check if number length equals to 10
-    if (phone.length == 11) {
-        //reformat and return phone number in format (234) 567-8900
-        return phone.substr(1).replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
-    }
-    return null;
 }
 
 function distance(a, b){
