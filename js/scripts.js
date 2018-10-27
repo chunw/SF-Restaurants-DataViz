@@ -82,7 +82,7 @@ svg.on( 'mousedown', function() {
     } else {
       console.log("Error getting filterElement");
     }
-    filterElement.text(`${r_in_miles.toFixed(2)} miles`);
+    filterElement.text(`within ${r_in_miles.toFixed(2)} miles of ${selection}`);
   }
 })
 .on( "mouseup", function() {
