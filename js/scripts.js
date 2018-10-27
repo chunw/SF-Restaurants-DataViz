@@ -251,16 +251,16 @@ function updateFilteredListInView(data) {
 
   // update data count by risk category
   const counts = countDataByRiskCategory(data);
-  document.getElementById("No_Risk_Data_COUNT").innerHTML = counts[0];
-  document.getElementById("Low_Risk_COUNT").innerHTML = counts[1];
-  document.getElementById("Moderate_Risk_COUNT").innerHTML = counts[2];
-  document.getElementById("High_Risk_COUNT").innerHTML = counts[3];
+  document.getElementById("No_Risk_Data_COUNT").innerHTML = counts[3];
+  document.getElementById("Low_Risk_COUNT").innerHTML = counts[0];
+  document.getElementById("Moderate_Risk_COUNT").innerHTML = counts[1];
+  document.getElementById("High_Risk_COUNT").innerHTML = counts[2];
 }
 
 // This function returns [countLowRisk, countModerateRisk, countHighRisk, countNoRiskData]
 // for given dataset.
 function countDataByRiskCategory(data) {
-  if (!data) {
+  if (!data || !data.length) {
     return [0, 0, 0, 0];
   }
   let countLowRisk = 0,
