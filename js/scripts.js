@@ -63,7 +63,7 @@ svg.on( 'mousedown', function() {
 })
 .on( "mousemove", function() {
   if (selection === null) return;
-  
+
   const mousePos = d3.mouse(this);
   const s = (selection === 'A') ? filterCircleA : filterCircleB;
   if (s !== null){
@@ -377,7 +377,7 @@ function resetFilter() {
   resetDataCount();
 }
 
-//This function takes in latitude and longitude of two location
+// This function takes in latitude and longitude of two location
 // and returns the distance between them as the crow flies (in km)
 function calcCrow(lat1, lon1, lat2, lon2)
 {

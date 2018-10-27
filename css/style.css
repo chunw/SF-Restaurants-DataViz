@@ -13,6 +13,16 @@
   opacity         : 0.1;
 }
 
+.pageTitle {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 20px;
+  padding: 12px 20px;
+}
+
+.legendTitle {
+  margin-bottom: -15px;
+}
+
 .location-text {
   cursor: move;
   opacity: 0.8;
@@ -26,6 +36,7 @@
 }
 
 .section.right {
+  padding-top: 0;
   padding-right: 18px;
   padding-left: 100px;
 }
