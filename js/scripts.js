@@ -155,12 +155,30 @@ function toggleData(checkbox, category=null) {
     category = "NO_RISK_DATA";
   }
   const selection = document.getElementsByClassName(category);
+
+  // toggle data visibility in list
+  let categoryClass;
+  if (category === "NO_RISK_DATA") {
+    categoryClass = "NO_RISK_DATA";
+  } else {
+    categoryClass = category.replace(" ", "_");
+  }
+  const selectClass = `li.${categoryClass}`;
+  const listSelection = $("#result-list").find(selectClass);
+  for (var i=0; i < listSelection.length; i++) {
+    if (checkbox.checked) {
+      listSelection[i].style.display = "block";
+    } else {
+      listSelection[i].style.display = "none";
+    }
+  }
+
+  // toggle data visibility on map
   if (checkbox.checked) {
     render(selection);
   } else {
     hide(selection);
   }
-
 }
 
 function render(selection) {
@@ -208,8 +226,9 @@ function updateFilteredListInView(data) {
   template = ``;
   $("#filter-count").text(data.length);
   data.forEach(d => {
+    const riskCssClass = d.risk_category? d.risk_category.replace(" ", "_") : "NO_RISK_DATA";
     template +=
-    `<li class="collection-item avatar">
+    `<li class="collection-item avatar ${riskCssClass}">
         <span class="title">${d.business_name}</span>
         <p>
           <span class="content address">${d.business_address} </span><br>
