@@ -420,3 +420,7 @@ function resetDataCount() {
   document.getElementById("Moderate_Risk_COUNT").innerHTML = csv_countModerateRisk;
   document.getElementById("High_Risk_COUNT").innerHTML = csv_countHighRisk;
 }
+
+function onClearFilter() {
+  resetFilter();
+}
