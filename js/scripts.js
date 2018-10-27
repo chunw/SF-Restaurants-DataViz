@@ -64,7 +64,20 @@ svg.on( 'mousedown', function() {
   var s = svg.select("#circle" + selection);
   if (!s.empty()) {
     const centerPos = [parseInt(s.attr("cx"), 10), parseInt(s.attr("cy"), 10)];
-    s.attr('r', distance(mousePos, centerPos));
+    const radius = distance(mousePos, centerPos);
+    s.attr('r', radius);
+
+    // Show filter range on right-side panel
+    const r_in_miles = computeDistanceInMiles(centerPos, radius);
+    let filterElement = null;
+    if (selection == "A") {
+      filterElement = $("#filter-range-a");
+    } else if (selection == "B") {
+      filterElement = $("#filter-range-b");
+    } else {
+      console.log("Error getting filterElement");
+    }
+    filterElement.text(`${r_in_miles.toFixed(2)} miles`);
   }
   updateFilteredListOnMap(selection);
 })
@@ -75,7 +88,7 @@ svg.on( 'mousedown', function() {
   } else {
     resetFilter();
   }
-  
+
 });
 
 // Add restaurant points and callbacks for filtering by risk
@@ -306,5 +319,43 @@ function resetFilter() {
   svg.selectAll("circle.Restaurant").style("fill", d => getRiskColor(d));
   selection = 'A';
   filteredData = [];
+  $("#filter-range-a").text("");
+  $("#filter-range-b").text("");
   updateFilteredListInView(dedupRestaurants(filteredData));
+}
+
+//This function takes in latitude and longitude of two location
+// and returns the distance between them as the crow flies (in km)
+function calcCrow(lat1, lon1, lat2, lon2)
+{
+  var R = 6371; // km
+  var dLat = toRad(lat2-lat1);
+  var dLon = toRad(lon2-lon1);
+  var lat1 = toRad(lat1);
+  var lat2 = toRad(lat2);
+
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
+  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  var d = R * c;
+  return d;
+}
+
+// Converts numeric degrees to radians
+function toRad(Value) {
+  return Value * Math.PI / 180;
+}
+
+function convertKmToMiles(km) {
+  return km * 0.621371;
+}
+
+function computeDistanceInMiles(center, radius) {
+  //projection.invert([x, y]) returns [lon, lat]
+  const loc1 = projection.invert(center);
+  const loc2_x = center[0] + radius;
+  const loc2_y = center[1];
+  const loc2 = projection.invert([loc2_x, loc2_y]);
+  const distanceInKm = calcCrow(loc1[0], loc1[1], loc2[0], loc2[1]);
+  return convertKmToMiles(distanceInKm);
 }
