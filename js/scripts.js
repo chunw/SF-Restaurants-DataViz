@@ -161,12 +161,30 @@ function toggleData(checkbox, category=null) {
     category = "NO_RISK_DATA";
   }
   const selection = document.getElementsByClassName(category);
+
+  // toggle data visibility in list
+  let categoryClass;
+  if (category === "NO_RISK_DATA") {
+    categoryClass = "NO_RISK_DATA";
+  } else {
+    categoryClass = category.replace(" ", "_");
+  }
+  const selectClass = `li.${categoryClass}`;
+  const listSelection = $("#result-list").find(selectClass);
+  for (var i=0; i < listSelection.length; i++) {
+    if (checkbox.checked) {
+      listSelection[i].style.display = "block";
+    } else {
+      listSelection[i].style.display = "none";
+    }
+  }
+
+  // toggle data visibility on map
   if (checkbox.checked) {
     render(selection);
   } else {
     hide(selection);
   }
-
 }
 
 function render(selection) {
@@ -209,12 +227,14 @@ function updateFilteredListInView(data) {
   // sort data by score
   data = data.sort(function(a, b){return b.inspection_score - a.inspection_score});
 
+  // show data in list
   const container = $("#result-list");
   template = ``;
   $("#filter-count").text(data.length);
   data.forEach(d => {
+    const riskCssClass = d.risk_category? d.risk_category.replace(" ", "_") : "NO_RISK_DATA";
     template +=
-    `<li class="collection-item avatar">
+    `<li class="collection-item avatar ${riskCssClass}">
         <span class="title">${d.business_name}</span>
         <p>
           <span class="content address">${d.business_address} </span><br>
@@ -226,26 +246,45 @@ function updateFilteredListInView(data) {
     `
   });
   container.html(template);
+
+  // update data count by risk category
+  const counts = countDataByRiskCategory(data);
+  document.getElementById("No_Risk_Data_COUNT").innerHTML = counts[0];
+  document.getElementById("Low_Risk_COUNT").innerHTML = counts[1];
+  document.getElementById("Moderate_Risk_COUNT").innerHTML = counts[2];
+  document.getElementById("High_Risk_COUNT").innerHTML = counts[3];
 }
 
-function clearResultList() {
-  $("#filter-count").text(0);
-  const container = $("#result-list");
-  container.html(``);
+// This function returns [countLowRisk, countModerateRisk, countHighRisk, countNoRiskData]
+// for given dataset.
+function countDataByRiskCategory(data) {
+  if (!data) {
+    return [0, 0, 0, 0];
+  }
+  let countLowRisk = 0,
+      countModerateRisk = 0,
+      countHighRisk = 0,
+      countNoRiskData = 0;
+  for (var i=0; i < data.length; i++) {
+    switch (data[i].risk_category) {
+      case "Low Risk":
+        countLowRisk++;
+        break;
+      case "Moderate Risk":
+        countModerateRisk++;
+        break;
+      case "High Risk":
+        countHighRisk++;
+        break;
+      default:
+        countNoRiskData++;
+    }
+  }
+  return [countLowRisk, countModerateRisk, countHighRisk, countNoRiskData];
 }
 
 function dedupRestaurants(restaurants) {
   return Array.from(restaurants.reduce((m, t) => m.set(t.business_id, t), new Map()).values());
-}
-
-function formatPhoneNum(phone) {
-    phone = phone.replace(/[^\d]/g, "");
-    //check if number length equals to 10
-    if (phone.length == 11) {
-        //reformat and return phone number in format (234) 567-8900
-        return phone.substr(1).replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
-    }
-    return null;
 }
 
 function setupFilterCircle(mousePos) {
