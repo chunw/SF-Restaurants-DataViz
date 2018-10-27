@@ -43,7 +43,7 @@ svg.append('image')
 // Add callbacks for drawing selection frames and filtering to intersection
 // Reference: http://bl.ocks.org/lgersman/5310854
 svg.on( 'mousedown', function() {
-  if (selection!=='A' && selection!=='B') return;
+  if (selection === null) return;
 
   const mousePos = d3.mouse(this);
   svg.append("circle")
@@ -330,6 +330,7 @@ function nextSelection() {
   }
 }
 
+// Reference: https://github.com/d3/d3-drag
 function dragLocationText() {
   var element = d3.select(this).classed("dragging", true);
 
