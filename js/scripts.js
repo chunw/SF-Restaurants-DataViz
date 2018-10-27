@@ -56,7 +56,6 @@ svg.on( 'mousedown', function() {
   .attr('class', "location-text")
   .attr('x', mousePos[0] - LOCATION_TEXT_OFFSET)
   .attr('y', mousePos[1] + LOCATION_TEXT_OFFSET)
-  .style('visibility', 'hidden')
   .text(selection)
   .call(d3.drag().on("start", dragLocationText));
 })
@@ -72,7 +71,6 @@ svg.on( 'mousedown', function() {
 .on( "mouseup", function() {
   if (selection==='A' || selection==='B'){
     svg.select("#circle" + selection).lower();
-    svg.select("#location" + selection).style('visibility', 'visible');
     nextSelection();
   } else {
     resetFilter();
@@ -237,14 +235,17 @@ function distance(a, b){
 
 function updateFilteredListOnMap(location) {
   filteredData = [];
-  var s = svg.select("#circle" + location);
-  if (!s.empty()) {
+  var A = svg.select("#circleA");
+  var B = svg.select("#circleB");
+  if (!A.empty() && !B.empty()) {
     svg.selectAll("circle.Restaurant")
     .style("fill", function(d) {
-      const center = [parseInt(s.attr("cx"), 10), parseInt(s.attr("cy"), 10)]
-      const r = parseInt(s.attr( "r"), 10);
+      const A_center = [parseInt(A.attr("cx"), 10), parseInt(A.attr("cy"), 10)]
+      const A_r = parseInt(A.attr( "r"), 10);
+      const B_center = [parseInt(B.attr("cx"), 10), parseInt(B.attr("cy"), 10)]
+      const B_r = parseInt(B.attr( "r"), 10);
       const projectedLocation = projection([d.business_longitude, d.business_latitude]);
-      if (distance(center, projectedLocation) < r) {
+      if (distance(A_center, projectedLocation) < A_r && distance(B_center, projectedLocation) < B_r) {
         filteredData.push(d);
         return getRiskColor(d);
       } else {
@@ -252,6 +253,23 @@ function updateFilteredListOnMap(location) {
       }
     });
     updateFilteredListInView(dedupRestaurants(filteredData));
+  } else {
+    var s = svg.select("#circle" + location);
+    if (!s.empty()) {
+      svg.selectAll("circle.Restaurant")
+      .style("fill", function(d) {
+        const center = [parseInt(s.attr("cx"), 10), parseInt(s.attr("cy"), 10)]
+        const r = parseInt(s.attr( "r"), 10);
+        const projectedLocation = projection([d.business_longitude, d.business_latitude]);
+        if (distance(center, projectedLocation) < r) {
+          filteredData.push(d);
+          return getRiskColor(d);
+        } else {
+          return GRAY;
+        }
+      });
+      updateFilteredListInView(dedupRestaurants(filteredData));
+    }
   }
 }
 
