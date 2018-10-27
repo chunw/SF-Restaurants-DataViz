@@ -1,10 +1,11 @@
 // Settings
+const GRAY = '#DDDDDD';
 const LOW_RISK_COLOR = '#B3CD60';
 const MODERATE_RISK_COLOR = '#EE9D56';
 const HIGH_RISK_COLOR = '#D9493A';
 const NO_DATA_RISK_COLOR = '#61A466';
 const DATA_PT_RADIUS = 2;
-const RESET_RADIUS = 5;
+const LOCATION_TEXT_OFFSET = 4;
 const mapWidth = 750;
 const mapHeight = 750;
 
@@ -14,7 +15,7 @@ var countLowRisk = 0;
 var countModerateRisk = 0;
 var countHighRisk = 0;
 var countNoRiskData = 0;
-var selectionFrameId = 1;
+var selection = 'A';
 
 // Init Materialize components
 M.AutoInit();
@@ -42,50 +43,41 @@ svg.append('image')
 // Add callbacks for drawing selection frames and filtering to intersection
 // Reference: http://bl.ocks.org/lgersman/5310854
 svg.on( 'mousedown', function() {
-    // Clear a previous selection frame and add a temporary selection frame
-    const mousePos = d3.mouse(this);
-    svg.selectAll( "circle.selection" + selectionFrameId ).remove();
-    svg.append("circle")
-    .attr("class", "selection")
-    .attr('cx', mousePos[0])
-    .attr('cy', mousePos[1])
-    .attr('r', 0);
-  })
-  .on( "mousemove", function() {
-    // Update the temporary selection frame
-    const mousePos = d3.mouse(this);
-    var s = svg.select("circle.selection");
-    if (!s.empty()) {
-      const centerPos = [parseInt(s.attr("cx"), 10), parseInt(s.attr("cy"), 10)];
-      s.attr('r', distance(mousePos, centerPos));
-    }
-  })
-.on( "mouseup", function() {
-  var s = svg.select("circle.selection");
+  if (selection!=='A' && selection!=='B') return;
+
+  const mousePos = d3.mouse(this);
+  svg.append("circle")
+  .attr('id', 'circle' + selection)
+  .attr('cx', mousePos[0])
+  .attr('cy', mousePos[1])
+  .attr('r', 10);
+  svg.append("text")
+  .attr('id', 'location' + selection)
+  .attr('class', "location-text")
+  .attr('x', mousePos[0] - LOCATION_TEXT_OFFSET)
+  .attr('y', mousePos[1] + LOCATION_TEXT_OFFSET)
+  .style('visibility', 'hidden')
+  .text(selection)
+  .call(d3.drag().on("start", dragLocationText));
+})
+.on( "mousemove", function() {
+  const mousePos = d3.mouse(this);
+  var s = svg.select("#circle" + selection);
   if (!s.empty()) {
     const centerPos = [parseInt(s.attr("cx"), 10), parseInt(s.attr("cy"), 10)];
-    const r = parseInt(s.attr( "r"), 10);
-    if (r < RESET_RADIUS){
-      // Reset the visualization
-      svg.selectAll("circle.Restaurant").style("fill", d => getRiskColor(d));
-      svg.selectAll("circle.selection1").remove();
-      svg.selectAll("circle.selection2").remove();
-
-      clearResultList();
-    } else {
-      // Prepare for filtering
-      svg.append("circle")
-      .attr("class", "selection" + selectionFrameId)
-      .attr('cx', centerPos[0])
-      .attr('cy', centerPos[1])
-      .attr('r', r)
-      .lower();
-      filterToIntersection();
-      updateFrameId();
-    }
-    // Clear the temporary selection frame
-    s.remove();
+    s.attr('r', distance(mousePos, centerPos));
   }
+  updateFilteredListOnMap(selection);
+})
+.on( "mouseup", function() {
+  if (selection==='A' || selection==='B'){
+    svg.select("#circle" + selection).lower();
+    svg.select("#location" + selection).style('visibility', 'visible');
+    nextSelection();
+  } else {
+    resetFilter();
+  }
+  
 });
 
 // Add restaurant points and callbacks for filtering by risk
@@ -196,33 +188,6 @@ function getRiskColor(d) {
   }
 }
 
-function distance(a, b){
-  return Math.sqrt(Math.pow((a[0]-b[0]), 2) + Math.pow((a[1]-b[1]), 2));
-}
-
-function filterToIntersection() {
-  filteredData = [];
-  var A = svg.select("circle.selection1");
-  var B = svg.select("circle.selection2");
-  if (!A.empty() && !B.empty()) {
-    svg.selectAll("circle.Restaurant")
-    .style("fill", function(d) {
-      const A_center = [parseInt(A.attr("cx"), 10), parseInt(A.attr("cy"), 10)]
-      const A_r = parseInt(A.attr( "r"), 10);
-      const B_center = [parseInt(B.attr("cx"), 10), parseInt(B.attr("cy"), 10)]
-      const B_r = parseInt(B.attr( "r"), 10);
-      const projectedLocation = projection([d.business_longitude, d.business_latitude]);
-      if (distance(A_center, projectedLocation) < A_r && distance(B_center, projectedLocation) < B_r) {
-        filteredData.push(d);
-        return getRiskColor(d);
-      } else {
-        return "#dbd9d9";
-      }
-    });
-    updateFilteredListInView(dedupRestaurants(filteredData));
-  }
-}
-
 function updateFilteredListInView(data) {
   // sort data by score
   data = data.sort(function(a, b){return b.inspection_score - a.inspection_score});
@@ -266,6 +231,62 @@ function formatPhoneNum(phone) {
     return null;
 }
 
-function updateFrameId() {
-  selectionFrameId = (selectionFrameId++)%2+1;
+function distance(a, b){
+  return Math.sqrt(Math.pow((a[0]-b[0]), 2) + Math.pow((a[1]-b[1]), 2));
+}
+
+function updateFilteredListOnMap(location) {
+  filteredData = [];
+  var s = svg.select("#circle" + location);
+  if (!s.empty()) {
+    svg.selectAll("circle.Restaurant")
+    .style("fill", function(d) {
+      const center = [parseInt(s.attr("cx"), 10), parseInt(s.attr("cy"), 10)]
+      const r = parseInt(s.attr( "r"), 10);
+      const projectedLocation = projection([d.business_longitude, d.business_latitude]);
+      if (distance(center, projectedLocation) < r) {
+        filteredData.push(d);
+        return getRiskColor(d);
+      } else {
+        return GRAY;
+      }
+    });
+    updateFilteredListInView(dedupRestaurants(filteredData));
+  }
+}
+
+function nextSelection() {
+  if (selection === 'A'){
+    selection = 'B'
+  } else {
+    selection = null;
+  }
+}
+
+function dragLocationText() {
+  var element = d3.select(this).classed("dragging", true);
+
+  d3.event.on("drag", dragged).on("end", ended);
+
+  function dragged(d) {
+    const location = d3.select(this).text();
+    updateFilteredListOnMap(location);
+    element.raise().attr("x", d3.event.x - LOCATION_TEXT_OFFSET).attr("y", d3.event.y + LOCATION_TEXT_OFFSET);
+    d3.select('#circle' + location).attr("cx", d3.event.x).attr("cy", d3.event.y);
+  }
+
+  function ended() {
+    element.classed("dragging", false);
+  }
+}
+
+function resetFilter() {
+  svg.select("#circleA").remove();
+  svg.select("#locationA").remove();
+  svg.select("#circleB").remove();
+  svg.select("#locationB").remove();
+  svg.selectAll("circle.Restaurant").style("fill", d => getRiskColor(d));
+  selection = 'A';
+  filteredData = [];
+  updateFilteredListInView(dedupRestaurants(filteredData));
 }

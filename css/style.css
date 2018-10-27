@@ -1,21 +1,22 @@
-.selection, .selection1, .selection2 {
+#circleA, #circleB {
   stroke          : gray;
   stroke-width    : 1px;
 }
 
-.selection {
-  fill            : transparent;
-  stroke-dasharray: 5px;
-}
-
-.selection1 {
+#circleA {
   fill            : purple;
   opacity         : 0.1;
 }
 
-.selection2 {
+#circleB {
   fill            : yellow;
   opacity         : 0.1;
+}
+
+.location-text {
+  cursor: move;
+  opacity: 0.8;
+  user-select: none;
 }
 
 .section {
