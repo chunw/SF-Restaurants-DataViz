@@ -11,10 +11,10 @@ const mapHeight = 750;
 
 var csvData;
 var filteredData = [];
-var countLowRisk = 0;
-var countModerateRisk = 0;
-var countHighRisk = 0;
-var countNoRiskData = 0;
+var csv_countLowRisk = 0;
+var csv_countModerateRisk = 0;
+var csv_countHighRisk = 0;
+var csv_countNoRiskData = 0;
 var selection = 'A';
 
 // Init Materialize components
@@ -112,16 +112,16 @@ d3.csv("/data/restaurant_scores.csv").then(function(data) {
   .style('fill', d => {
     switch (d.risk_category) {
       case "Low Risk":
-        countLowRisk++;
+        csv_countLowRisk++;
         return LOW_RISK_COLOR;
       case "Moderate Risk":
-        countModerateRisk++;
+        csv_countModerateRisk++;
         return MODERATE_RISK_COLOR;
       case "High Risk":
-        countHighRisk++;
+        csv_countHighRisk++;
         return HIGH_RISK_COLOR;
       default:
-        countNoRiskData++;
+        csv_countNoRiskData++;
         return NO_DATA_RISK_COLOR;
     }
   })
@@ -198,10 +198,7 @@ function setupLegend() {
   document.getElementById("Low_Risk").style.color = LOW_RISK_COLOR;
   document.getElementById("Moderate_Risk").style.color = MODERATE_RISK_COLOR;
   document.getElementById("High_Risk").style.color = HIGH_RISK_COLOR;
-  document.getElementById("No_Risk_Data_COUNT").innerHTML = countNoRiskData;
-  document.getElementById("Low_Risk_COUNT").innerHTML = countLowRisk;
-  document.getElementById("Moderate_Risk_COUNT").innerHTML = countModerateRisk;
-  document.getElementById("High_Risk_COUNT").innerHTML = countHighRisk;
+  resetDataCount();
 }
 
 function getRiskColor(d) {
@@ -362,6 +359,7 @@ function resetFilter() {
   $("#filter-range-a").text("");
   $("#filter-range-b").text("");
   updateFilteredListInView(dedupRestaurants(filteredData));
+  resetDataCount();
 }
 
 //This function takes in latitude and longitude of two location
@@ -398,4 +396,12 @@ function computeDistanceInMiles(center, radius) {
   const loc2 = projection.invert([loc2_x, loc2_y]);
   const distanceInKm = calcCrow(loc1[0], loc1[1], loc2[0], loc2[1]);
   return convertKmToMiles(distanceInKm);
+}
+
+function resetDataCount() {
+  // setup/reset all data count by risk category to original counts in CSV.
+  document.getElementById("No_Risk_Data_COUNT").innerHTML = csv_countNoRiskData;
+  document.getElementById("Low_Risk_COUNT").innerHTML = csv_countLowRisk;
+  document.getElementById("Moderate_Risk_COUNT").innerHTML = csv_countModerateRisk;
+  document.getElementById("High_Risk_COUNT").innerHTML = csv_countHighRisk;
 }
