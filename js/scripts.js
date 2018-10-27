@@ -16,6 +16,8 @@ var csv_countModerateRisk = 0;
 var csv_countHighRisk = 0;
 var csv_countNoRiskData = 0;
 var selection = 'A';
+var filterCircleA = null;
+var filterCircleB = null;
 
 // Init Materialize components
 M.AutoInit();
@@ -46,11 +48,11 @@ svg.on( 'mousedown', function() {
   if (selection === null) return;
 
   const mousePos = d3.mouse(this);
-  svg.append("circle")
-  .attr('id', 'circle' + selection)
-  .attr('cx', mousePos[0])
-  .attr('cy', mousePos[1])
-  .attr('r', 10);
+  if (selection === 'A'){
+    filterCircleA = setupFilterCircle(mousePos);
+  } else if (selection === 'B'){
+    filterCircleB = setupFilterCircle(mousePos);
+  }
   svg.append("text")
   .attr('id', 'location' + selection)
   .attr('class', "location-text")
@@ -60,35 +62,39 @@ svg.on( 'mousedown', function() {
   .call(d3.drag().on("start", dragLocationText));
 })
 .on( "mousemove", function() {
+  if (selection === null) return;
+  
   const mousePos = d3.mouse(this);
-  var s = svg.select("#circle" + selection);
-  if (!s.empty()) {
+  const s = (selection === 'A') ? filterCircleA : filterCircleB;
+  if (s !== null){
     const centerPos = [parseInt(s.attr("cx"), 10), parseInt(s.attr("cy"), 10)];
     const radius = distance(mousePos, centerPos);
     s.attr('r', radius);
+    updateFilteredListOnMap(selection);
 
     // Show filter range on right-side panel
     const r_in_miles = computeDistanceInMiles(centerPos, radius);
     let filterElement = null;
-    if (selection == "A") {
+    if (selection === "A") {
       filterElement = $("#filter-range-a");
-    } else if (selection == "B") {
+    } else if (selection === "B") {
       filterElement = $("#filter-range-b");
     } else {
       console.log("Error getting filterElement");
     }
     filterElement.text(`${r_in_miles.toFixed(2)} miles`);
   }
-  updateFilteredListOnMap(selection);
 })
 .on( "mouseup", function() {
-  if (selection==='A' || selection==='B'){
-    svg.select("#circle" + selection).lower();
-    nextSelection();
-  } else {
+  if (selection === null){
     resetFilter();
+  } else if (selection === 'A'){
+    filterCircleA.lower();
+    nextSelection();
+  } else if (selection === 'B'){
+    filterCircleB.lower();
+    nextSelection();
   }
-
 });
 
 // Add restaurant points and callbacks for filtering by risk
@@ -278,21 +284,27 @@ function dedupRestaurants(restaurants) {
   return Array.from(restaurants.reduce((m, t) => m.set(t.business_id, t), new Map()).values());
 }
 
+function setupFilterCircle(mousePos) {
+  return svg.append("circle")
+    .attr('id', 'circle' + selection)
+    .attr('cx', mousePos[0])
+    .attr('cy', mousePos[1])
+    .attr('r', 0);
+}
+
 function distance(a, b){
   return Math.sqrt(Math.pow((a[0]-b[0]), 2) + Math.pow((a[1]-b[1]), 2));
 }
 
 function updateFilteredListOnMap(location) {
   filteredData = [];
-  var A = svg.select("#circleA");
-  var B = svg.select("#circleB");
-  if (!A.empty() && !B.empty()) {
+  if (filterCircleA !== null && filterCircleB !== null) {
     svg.selectAll("circle.Restaurant")
     .style("fill", function(d) {
-      const A_center = [parseInt(A.attr("cx"), 10), parseInt(A.attr("cy"), 10)]
-      const A_r = parseInt(A.attr( "r"), 10);
-      const B_center = [parseInt(B.attr("cx"), 10), parseInt(B.attr("cy"), 10)]
-      const B_r = parseInt(B.attr( "r"), 10);
+      const A_center = [parseInt(filterCircleA.attr("cx"), 10), parseInt(filterCircleA.attr("cy"), 10)]
+      const A_r = parseInt(filterCircleA.attr( "r"), 10);
+      const B_center = [parseInt(filterCircleB.attr("cx"), 10), parseInt(filterCircleB.attr("cy"), 10)]
+      const B_r = parseInt(filterCircleB.attr( "r"), 10);
       const projectedLocation = projection([d.business_longitude, d.business_latitude]);
       if (distance(A_center, projectedLocation) < A_r && distance(B_center, projectedLocation) < B_r) {
         filteredData.push(d);
@@ -303,6 +315,7 @@ function updateFilteredListOnMap(location) {
     });
     updateFilteredListInView(dedupRestaurants(filteredData));
   } else {
+    console.log(location);
     var s = svg.select("#circle" + location);
     if (!s.empty()) {
       svg.selectAll("circle.Restaurant")
@@ -349,9 +362,11 @@ function dragLocationText() {
 }
 
 function resetFilter() {
-  svg.select("#circleA").remove();
+  filterCircleA.remove();
+  filterCircleB.remove();
+  filterCircleA = null;
+  filterCircleB = null;
   svg.select("#locationA").remove();
-  svg.select("#circleB").remove();
   svg.select("#locationB").remove();
   svg.selectAll("circle.Restaurant").style("fill", d => getRiskColor(d));
   selection = 'A';
