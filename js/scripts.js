@@ -97,61 +97,66 @@ svg.on( 'mousedown', function() {
   }
 });
 
+init();
+
 // Add restaurant points and callbacks for filtering by risk
-d3.csv("/data/restaurant_scores.csv").then(function(data) {
-  csvData = data;
-  svg.selectAll("circle")
-  .data(data)
-  .enter()
-  .append("circle")
-  .attr("cx", d => {
-    return projection([d.business_longitude, d.business_latitude])[0];
-  })
-  .attr("cy", d => {
-    return projection([d.business_longitude, d.business_latitude])[1];
-  })
-  .attr('r', DATA_PT_RADIUS)
-  .attr('pointer-events', 'visible')
-  .attr('class', d => {
-    return "Restaurant " + (d.risk_category ? d.risk_category : "NO_RISK_DATA");
-  })
-  .style('fill', d => {
-    switch (d.risk_category) {
-      case "Low Risk":
-        csv_countLowRisk++;
-        return LOW_RISK_COLOR;
-      case "Moderate Risk":
-        csv_countModerateRisk++;
-        return MODERATE_RISK_COLOR;
-      case "High Risk":
-        csv_countHighRisk++;
-        return HIGH_RISK_COLOR;
-      default:
-        csv_countNoRiskData++;
-        return NO_DATA_RISK_COLOR;
-    }
-  })
-  .on('mouseover', function(d) {
-    const color = getRiskColor(d);
-    return tooltip.style("visibility", "visible").html(
-      `<div>
-        <span style="color: ${color}; font-weight: bold">${d.business_name}</span>
-        <span style="color: #D3D3D3"> | </span>
-        <span style="color: white;">Inspection Score: ${d.inspection_score}</span>
-      </div>`
-    );
-  })
-  .on('mousemove', function() {
-   return tooltip
-     .style("top", (event.pageY - 30) + "px")
-     .style("left", event.pageX + "px");
-  })
-  .on('mouseout', function() {
-    return tooltip.style("visibility", "hidden");
+function init() {
+  d3.csv("/data/restaurant_scores.csv").then(function(data) {
+    csvData = data;
+    svg.selectAll("circle")
+    .data(data)
+    .enter()
+    .append("circle")
+    .attr("cx", d => {
+      return projection([d.business_longitude, d.business_latitude])[0];
+    })
+    .attr("cy", d => {
+      return projection([d.business_longitude, d.business_latitude])[1];
+    })
+    .attr('r', DATA_PT_RADIUS)
+    .attr('pointer-events', 'visible')
+    .attr('class', d => {
+      return "Restaurant " + (d.risk_category ? d.risk_category : "NO_RISK_DATA");
+    })
+    .style('fill', d => {
+      switch (d.risk_category) {
+        case "Low Risk":
+          csv_countLowRisk++;
+          return LOW_RISK_COLOR;
+        case "Moderate Risk":
+          csv_countModerateRisk++;
+          return MODERATE_RISK_COLOR;
+        case "High Risk":
+          csv_countHighRisk++;
+          return HIGH_RISK_COLOR;
+        default:
+          csv_countNoRiskData++;
+          return NO_DATA_RISK_COLOR;
+      }
+    })
+    .on('mouseover', function(d) {
+      const color = getRiskColor(d);
+      return tooltip.style("visibility", "visible").html(
+        `<div>
+          <span style="color: ${color}; font-weight: bold">${d.business_name}</span>
+          <span style="color: #D3D3D3"> | </span>
+          <span style="color: white;">Inspection Score: ${d.inspection_score}</span>
+        </div>`
+      );
+    })
+    .on('mousemove', function() {
+     return tooltip
+       .style("top", (event.pageY - 30) + "px")
+       .style("left", event.pageX + "px");
+    })
+    .on('mouseout', function() {
+      return tooltip.style("visibility", "hidden");
+    });
+
+    setupLegend();
   });
 
-  setupLegend();
-});
+}
 
 // Helper functions
 function toggleData(checkbox, category=null) {
@@ -419,8 +424,4 @@ function resetDataCount() {
   document.getElementById("Low_Risk_COUNT").innerHTML = csv_countLowRisk;
   document.getElementById("Moderate_Risk_COUNT").innerHTML = csv_countModerateRisk;
   document.getElementById("High_Risk_COUNT").innerHTML = csv_countHighRisk;
-}
-
-function onClearFilter() {
-  resetFilter();
 }
