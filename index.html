@@ -22,7 +22,7 @@
     -->
   </div>
   <div class="section right">
-    <div class="legendTitle">LEGEND</div>
+    <div class="legendTitle">LEGEND <span style="font-size: 10px">(click to toggle data visibility)</span></div>
     <div class="checkbox-group">
       <p>
         <label>
@@ -50,8 +50,15 @@
       </p>
     </div>
     <div class="result-list-info">
+
+      <div style="color: #8e8e8e; ">
+        You may select two points of interest on the map and view only restaurants within the intersection
+        of the areas surrouding them.
+      </div>
+      <div style="padding-top: 4px; padding-bottom: 4px;">
       Range filter for A: <span class="filter-range" id="filter-range-a"></span><br>
       Range filter for B: <span class="filter-range" id="filter-range-b"></span><br>
+      <div>
       Restaurants within the intersection (<span id="filter-count">0</span>):</div>
     <ul class="collection" id="result-list">
     </ul>
