@@ -20,6 +20,8 @@
 }
 
 .legendTitle {
+  font-family: 'Quicksand', sans-serif;
+  font-weight: 600;
   margin-bottom: -15px;
 }
 
@@ -53,6 +55,7 @@
 }
 
 .checkbox-group {
+  font-family: 'Quicksand', sans-serif;
   margin-left: -54px;
   transform: scale(0.8);
 }
