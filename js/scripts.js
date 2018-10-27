@@ -203,6 +203,7 @@ function updateFilteredListInView(data) {
   // sort data by score
   data = data.sort(function(a, b){return b.inspection_score - a.inspection_score});
 
+  // show data in list
   const container = $("#result-list");
   template = ``;
   $("#filter-count").text(data.length);
@@ -220,6 +221,41 @@ function updateFilteredListInView(data) {
     `
   });
   container.html(template);
+
+  // update data count by risk category
+  const counts = countDataByRiskCategory(data);
+  document.getElementById("No_Risk_Data_COUNT").innerHTML = counts[0];
+  document.getElementById("Low_Risk_COUNT").innerHTML = counts[1];
+  document.getElementById("Moderate_Risk_COUNT").innerHTML = counts[2];
+  document.getElementById("High_Risk_COUNT").innerHTML = counts[3];
+}
+
+// This function returns [countLowRisk, countModerateRisk, countHighRisk, countNoRiskData]
+// for given dataset.
+function countDataByRiskCategory(data) {
+  if (!data) {
+    return [0, 0, 0, 0];
+  }
+  let countLowRisk = 0,
+      countModerateRisk = 0,
+      countHighRisk = 0,
+      countNoRiskData = 0;
+  for (var i=0; i < data.length; i++) {
+    switch (data[i].risk_category) {
+      case "Low Risk":
+        countLowRisk++;
+        break;
+      case "Moderate Risk":
+        countModerateRisk++;
+        break;
+      case "High Risk":
+        countHighRisk++;
+        break;
+      default:
+        countNoRiskData++;
+    }
+  }
+  return [countLowRisk, countModerateRisk, countHighRisk, countNoRiskData];
 }
 
 function clearResultList() {
