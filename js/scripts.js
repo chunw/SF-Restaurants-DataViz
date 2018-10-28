@@ -440,5 +440,12 @@ function resetDataCount() {
 }
 
 function onResetMap() {
+  // flip all checkboxes to be selected
+  $('#Checkbox_No_Risk_Data').prop('checked', true);
+  $('#Checkbox_Low_Risk').prop('checked', true);
+  $('#Checkbox_Moderate_Risk').prop('checked', true);
+  $('#Checkbox_High_Risk').prop('checked', true);
+  const selection = document.getElementsByClassName("Restaurant");
+  render(selection); // render all
   resetFilter();
 }
