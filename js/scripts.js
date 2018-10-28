@@ -234,18 +234,27 @@ function updateFilteredListInView(data) {
   template = ``;
   $("#filter-count").text(data.length);
   data.forEach(d => {
+    // make sure that we obey the checkbox filter values
     const riskCssClass = d.risk_category? d.risk_category.replace(" ", "_") : "NO_RISK_DATA";
-    template +=
-    `<li class="collection-item avatar ${riskCssClass}">
-        <span class="title">${d.business_name}</span>
-        <p>
-          <span class="content address">${d.business_address} </span><br>
-          <span class="content violation"><span class="title">Inspection Score:</span> ${d.inspection_score} (inspected on: ${d.inspection_date || "N/A"})</span><br>
-          <span class="content violation"><span class="title">Violation:</span> ${d.violation_description || "No violation found"}</span>
-        </p>
-        <span class="secondary-content" style="color:${getRiskColor(d)}"><i class="material-icons">${d.risk_category || "No risk"}</i></span>
-      </li>
-    `
+    let checkboxVal;
+    if (d.risk_category) {
+      checkboxVal = $(`#Checkbox_${riskCssClass}`).is(":checked");
+    } else {
+      checkboxVal = $(`#Checkbox_No_Risk_Data`).is(":checked");
+    }
+    if (checkboxVal) {
+      template +=
+      `<li class="collection-item avatar ${riskCssClass}">
+          <span class="title">${d.business_name}</span>
+          <p>
+            <span class="content address">${d.business_address} </span><br>
+            <span class="content violation"><span class="title">Inspection Score:</span> ${d.inspection_score} (inspected on: ${d.inspection_date || "N/A"})</span><br>
+            <span class="content violation"><span class="title">Violation:</span> ${d.violation_description || "No violation found"}</span>
+          </p>
+          <span class="secondary-content" style="color:${getRiskColor(d)}"><i class="material-icons">${d.risk_category || "No risk"}</i></span>
+        </li>
+      `
+    }
   });
   container.html(template);
 
@@ -367,8 +376,12 @@ function dragLocationText() {
 }
 
 function resetFilter() {
-  filterCircleA.remove();
-  filterCircleB.remove();
+  if (filterCircleA) {
+    filterCircleA.remove();
+  }
+  if (filterCircleB) {
+    filterCircleB.remove();
+  }
   filterCircleA = null;
   filterCircleB = null;
   svg.select("#locationA").remove();
@@ -427,5 +440,5 @@ function resetDataCount() {
 }
 
 function onResetMap() {
-  // TODO
+  resetFilter();
 }
