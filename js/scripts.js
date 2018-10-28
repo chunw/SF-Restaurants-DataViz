@@ -82,7 +82,10 @@ svg.on( 'mousedown', function() {
     } else {
       console.log("Error getting filterElement");
     }
-    filterElement.text(`within ${r_in_miles.toFixed(2)} miles of ${selection}`);
+    filterElement.text(
+      (selection === "B" ? ` and also ` : ``)
+      + `within ${r_in_miles.toFixed(2)} miles of ${selection}`
+    );
   }
 })
 .on( "mouseup", function() {
@@ -230,9 +233,10 @@ function updateFilteredListInView(data) {
   data = data.sort(function(a, b){return b.inspection_score - a.inspection_score});
 
   // show data in list
+  document.getElementById("result-list-header").style.visibility = (filterCircleA !== null || filterCircleB !== null) ? 'visible' : 'hidden';
+  document.getElementById("filter-count").innerHTML = (data.length === 1) ? `There is 1 restaurant` : `There are ` + data.length + ` restaurants`;
   const container = $("#result-list");
   template = ``;
-  $("#filter-count").text(data.length);
   data.forEach(d => {
     // make sure that we obey the checkbox filter values
     const riskCssClass = d.risk_category? d.risk_category.replace(" ", "_") : "NO_RISK_DATA";
@@ -329,7 +333,6 @@ function updateFilteredListOnMap(location) {
     });
     updateFilteredListInView(dedupRestaurants(filteredData));
   } else {
-    console.log(location);
     var s = svg.select("#circle" + location);
     if (!s.empty()) {
       svg.selectAll("circle.Restaurant")

@@ -52,11 +52,13 @@
       <div>
         Drag out two circles on the map to view only the restaurants within their intersection. Then drag the text 'A' or 'B' on the map to move the respective circle.
       </div>
-      <div style="padding-top: 4px; padding-bottom: 4px;">
-      Range filter around A: <span class="filter-range" id="filter-range-a"></span><br>
-      Range filter around B: <span class="filter-range" id="filter-range-b"></span><br>
-      <div>
-      Restaurants within the intersection (<span id="filter-count">0</span>):</div>
+      <div id="result-list-header">
+        <span id="filter-count"></span>
+        <span class="filter-range" id="filter-range-a"></span>
+        <span class="filter-range" id="filter-range-b"></span>
+        <span>:</span>
+      </div>
+    </div>
     <ul class="collection" id="result-list">
     </ul>
   </div>

@@ -88,6 +88,11 @@
   color: #8e8e8e;
 }
 
+#result-list-header {
+  padding-top: 10px;
+  visibility: hidden;
+}
+
 #result-list .title {
   font-family: sans-serif;
 }
@@ -118,7 +123,7 @@
   font-size: 14px;
 }
 
-.filter-range {
+#filter-count, .filter-range {
   font-weight: 600;
 }
 
