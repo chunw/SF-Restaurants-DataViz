@@ -248,8 +248,8 @@ function updateFilteredListInView(data) {
           <span class="title">${d.business_name}</span>
           <p>
             <span class="content address">${d.business_address} </span><br>
-            <span class="content violation"><span class="title">Inspection Score:</span> ${d.inspection_score} (inspected on: ${d.inspection_date || "N/A"})</span><br>
-            <span class="content violation"><span class="title">Violation:</span> ${d.violation_description || "No violation found"}</span>
+            <span class="content violation"><span class="title">Inspection score:</span> ${d.inspection_score} (inspected on: ${d.inspection_date || "N/A"})</span><br>
+            <span class="content violation"><span class="title">Safety violation:</span> ${d.violation_description || "No violation found"}</span>
           </p>
           <span class="secondary-content" style="color:${getRiskColor(d)}"><i class="material-icons">${d.risk_category || "No risk"}</i></span>
         </li>
