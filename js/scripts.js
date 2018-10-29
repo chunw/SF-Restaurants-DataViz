@@ -108,7 +108,7 @@ svg.on( "mousedown", function() {
   if (s && b){
     const centerPos = [parseInt(s.attr("cx"), 10), parseInt(s.attr("cy"), 10)];
     let radius = distance(mousePos, centerPos);
-    if (radius < 1){
+    if (radius < DATA_PT_RADIUS){
       radius = DEFAULT_FILTER_RADIUS;
     }
     s.lower().attr("r", radius);
