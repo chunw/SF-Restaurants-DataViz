@@ -1,10 +1,11 @@
 // Settings
-const GRAY = '#DDDDDD';
-const LOW_RISK_COLOR = '#B3CD60';
-const MODERATE_RISK_COLOR = '#EE9D56';
-const HIGH_RISK_COLOR = '#D9493A';
-const NO_DATA_RISK_COLOR = '#61A466';
+const GRAY = "#DDDDDD";
+const LOW_RISK_COLOR = "#B3CD60";
+const MODERATE_RISK_COLOR = "#EE9D56";
+const HIGH_RISK_COLOR = "#D9493A";
+const NO_DATA_RISK_COLOR = "#61A466";
 const DATA_PT_RADIUS = 2;
+const DEFAULT_FILTER_RADIUS = 28.5;
 const LOCATION_TEXT_OFFSET = 4;
 const mapWidth = 750;
 const mapHeight = 750;
@@ -15,9 +16,11 @@ var csv_countLowRisk = 0;
 var csv_countModerateRisk = 0;
 var csv_countHighRisk = 0;
 var csv_countNoRiskData = 0;
-var selection = 'A';
+var selection = "A";
 var filterCircleA = null;
 var filterCircleB = null;
+var borderA = null;
+var borderB = null;
 
 // Init Materialize components
 M.AutoInit();
@@ -28,48 +31,53 @@ var projection = d3.geoMercator()
   .scale(225000)
   .translate([mapWidth / 2, mapHeight / 2]);
 
-var svg = d3.select('#svg').append('svg')
-  .attr('width', mapWidth)
-  .attr('height', mapHeight);
+var svg = d3.select("#svg").append("svg")
+  .attr("width", mapWidth)
+  .attr("height", mapHeight);
 
 var tooltip = d3.select("body")
   .append("div")
-  .attr('class', 'tooltip');
+  .attr("class", "tooltip");
 
 // Add SVG map
-svg.append('image')
-  .attr('width', mapWidth)
-  .attr('height', mapHeight)
-  .attr('xlink:href', 'data/sf-map.svg');
+svg.append("image")
+  .attr("width", mapWidth)
+  .attr("height", mapHeight)
+  .attr("xlink:href", "data/sf-map.svg");
 
 // Add callbacks for drawing selection frames and filtering to intersection
 // Reference: http://bl.ocks.org/lgersman/5310854
-svg.on( 'mousedown', function() {
+svg.on( "mousedown", function() {
   if (selection === null) return;
 
   const mousePos = d3.mouse(this);
-  if (selection === 'A'){
+  if (selection === "A"){
     filterCircleA = setupFilterCircle(mousePos);
-  } else if (selection === 'B'){
+    borderA = setupBorder(mousePos);
+  } else if (selection === "B"){
     filterCircleB = setupFilterCircle(mousePos);
+    borderB = setupBorder(mousePos);
   }
   svg.append("text")
-  .attr('id', 'location' + selection)
-  .attr('class', "location-text")
-  .attr('x', mousePos[0] - LOCATION_TEXT_OFFSET)
-  .attr('y', mousePos[1] + LOCATION_TEXT_OFFSET)
+  .attr("id", "location" + selection)
+  .attr("class", "location-text")
+  .attr("x", mousePos[0] - LOCATION_TEXT_OFFSET)
+  .attr("y", mousePos[1] + LOCATION_TEXT_OFFSET)
   .text(selection)
   .call(d3.drag().on("start", dragLocationText));
+  tooltip.style("opacity", 0);
 })
 .on( "mousemove", function() {
   if (selection === null) return;
 
   const mousePos = d3.mouse(this);
-  const s = (selection === 'A') ? filterCircleA : filterCircleB;
-  if (s !== null){
+  const s = (selection === "A") ? filterCircleA : filterCircleB;
+  const b = (selection === "A") ? borderA : borderB;
+  if (s && b){
     const centerPos = [parseInt(s.attr("cx"), 10), parseInt(s.attr("cy"), 10)];
     const radius = distance(mousePos, centerPos);
-    s.attr('r', radius);
+    s.attr("r", radius);
+    b.attr("r", radius);
     updateFilteredListOnMap(selection);
 
     // Show filter range on right-side panel
@@ -89,15 +97,41 @@ svg.on( 'mousedown', function() {
   }
 })
 .on( "mouseup", function() {
-  if (selection === null){
+  if (selection === null) {
     resetFilter();
-  } else if (selection === 'A'){
-    filterCircleA.lower();
-    nextSelection();
-  } else if (selection === 'B'){
-    filterCircleB.lower();
-    nextSelection();
+    return;
   }
+
+  const mousePos = d3.mouse(this);
+  const s = (selection === "A") ? filterCircleA : filterCircleB;
+  const b = (selection === "A") ? borderA : borderB;
+  if (s && b){
+    const centerPos = [parseInt(s.attr("cx"), 10), parseInt(s.attr("cy"), 10)];
+    let radius = distance(mousePos, centerPos);
+    if (radius < 1){
+      radius = DEFAULT_FILTER_RADIUS;
+    }
+    s.lower().attr("r", radius);
+    b.attr("r", radius);
+    updateFilteredListOnMap(selection);
+
+    // Show filter range on right-side panel
+    const r_in_miles = computeDistanceInMiles(centerPos, radius);
+    let filterElement = null;
+    if (selection === "A") {
+      filterElement = $("#filter-range-a");
+    } else if (selection === "B") {
+      filterElement = $("#filter-range-b");
+    } else {
+      console.log("Error getting filterElement");
+    }
+    filterElement.text(
+      (selection === "B" ? ` and also ` : ``)
+      + `within ${r_in_miles.toFixed(2)} miles of ${selection}`
+    );
+  }
+  nextSelection();
+  tooltip.style("opacity", 1);
 });
 
 init();
@@ -116,12 +150,12 @@ function init() {
     .attr("cy", d => {
       return projection([d.business_longitude, d.business_latitude])[1];
     })
-    .attr('r', DATA_PT_RADIUS)
-    .attr('pointer-events', 'visible')
-    .attr('class', d => {
+    .attr("r", DATA_PT_RADIUS)
+    .attr("pointer-events", "visible")
+    .attr("class", d => {
       return "Restaurant " + (d.risk_category ? d.risk_category : "NO_RISK_DATA");
     })
-    .style('fill', d => {
+    .style("fill", d => {
       switch (d.risk_category) {
         case "Low Risk":
           csv_countLowRisk++;
@@ -137,7 +171,7 @@ function init() {
           return NO_DATA_RISK_COLOR;
       }
     })
-    .on('mouseover', function(d) {
+    .on("mouseover", function(d) {
       const color = getRiskColor(d);
       return tooltip.style("visibility", "visible").html(
         `<div>
@@ -147,12 +181,12 @@ function init() {
         </div>`
       );
     })
-    .on('mousemove', function() {
+    .on("mousemove", function() {
      return tooltip
        .style("top", (event.pageY - 30) + "px")
        .style("left", event.pageX + "px");
     })
-    .on('mouseout', function() {
+    .on("mouseout", function() {
       return tooltip.style("visibility", "hidden");
     });
 
@@ -233,7 +267,7 @@ function updateFilteredListInView(data) {
   data = data.sort(function(a, b){return b.inspection_score - a.inspection_score});
 
   // show data in list
-  document.getElementById("result-list-header").style.visibility = (filterCircleA !== null || filterCircleB !== null) ? 'visible' : 'hidden';
+  document.getElementById("result-list-header").style.visibility = (filterCircleA !== null || filterCircleB !== null) ? "visible" : "hidden";
   document.getElementById("filter-count").innerHTML = (data.length === 1) ? `There is 1 restaurant` : `There are ` + data.length + ` restaurants`;
   const container = $("#result-list");
   template = ``;
@@ -304,10 +338,21 @@ function dedupRestaurants(restaurants) {
 
 function setupFilterCircle(mousePos) {
   return svg.append("circle")
-    .attr('id', 'circle' + selection)
-    .attr('cx', mousePos[0])
-    .attr('cy', mousePos[1])
-    .attr('r', 0);
+    .attr("id", "circle" + selection)
+    .attr("cx", mousePos[0])
+    .attr("cy", mousePos[1])
+    .attr("r", 0);
+}
+
+function setupBorder(mousePos) {
+  return svg.append("circle")
+    .attr("id", "border" + selection)
+    .attr("class", "circle-border")
+    .attr("data-center", selection)
+    .attr("cx", mousePos[0])
+    .attr("cy", mousePos[1])
+    .attr("r", 0)
+    .call(d3.drag().on("start", dragBorder));
 }
 
 function distance(a, b){
@@ -316,7 +361,7 @@ function distance(a, b){
 
 function updateFilteredListOnMap(location) {
   filteredData = [];
-  if (filterCircleA !== null && filterCircleB !== null) {
+  if (filterCircleA && filterCircleB) {
     svg.selectAll("circle.Restaurant")
     .style("fill", function(d) {
       const A_center = [parseInt(filterCircleA.attr("cx"), 10), parseInt(filterCircleA.attr("cy"), 10)]
@@ -333,7 +378,7 @@ function updateFilteredListOnMap(location) {
     });
     updateFilteredListInView(dedupRestaurants(filteredData));
   } else {
-    var s = svg.select("#circle" + location);
+    const s = svg.select("#circle" + location);
     if (!s.empty()) {
       svg.selectAll("circle.Restaurant")
       .style("fill", function(d) {
@@ -353,8 +398,8 @@ function updateFilteredListOnMap(location) {
 }
 
 function nextSelection() {
-  if (selection === 'A'){
-    selection = 'B'
+  if (selection === "A"){
+    selection = "B"
   } else {
     selection = null;
   }
@@ -362,19 +407,56 @@ function nextSelection() {
 
 // Reference: https://github.com/d3/d3-drag
 function dragLocationText() {
-  var element = d3.select(this).classed("dragging", true);
+  const element = d3.select(this).classed("dragging", true);
 
   d3.event.on("drag", dragged).on("end", ended);
 
   function dragged(d) {
-    const location = d3.select(this).text();
+    const location = element.text();
     updateFilteredListOnMap(location);
     element.raise().attr("x", d3.event.x - LOCATION_TEXT_OFFSET).attr("y", d3.event.y + LOCATION_TEXT_OFFSET);
-    d3.select('#circle' + location).attr("cx", d3.event.x).attr("cy", d3.event.y);
+    d3.select("#circle" + location).attr("cx", d3.event.x).attr("cy", d3.event.y);
+    d3.select("#border" + location).attr("cx", d3.event.x).attr("cy", d3.event.y);
   }
 
   function ended() {
     element.classed("dragging", false);
+  }
+}
+
+function dragBorder(){
+  const element = d3.select(this).classed("dragging", true);
+
+  d3.event.on("drag", dragged).on("end", ended);
+  tooltip.style("opacity", 0);
+
+  function dragged(d) {
+    const location = element.attr("data-center");
+    const centerPos = [parseInt(element.attr("cx"), 10), parseInt(element.attr("cy"), 10)];
+    const radius = distance([d3.event.x, d3.event.y], centerPos);
+    element.attr("r", radius);
+    d3.select("#circle" + location).attr("r", radius);
+    updateFilteredListOnMap(location);
+
+    // Show filter range on right-side panel
+    const r_in_miles = computeDistanceInMiles(centerPos, radius);
+    let filterElement = null;
+    if (location === "A") {
+      filterElement = $("#filter-range-a");
+    } else if (location === "B") {
+      filterElement = $("#filter-range-b");
+    } else {
+      console.log("Error getting filterElement");
+    }
+    filterElement.text(
+      (location === "B" ? ` and also ` : ``)
+      + `within ${r_in_miles.toFixed(2)} miles of ${location}`
+    );
+  }
+
+  function ended() {
+    element.classed("dragging", false);
+    tooltip.style("opacity", 1);
   }
 }
 
@@ -385,12 +467,20 @@ function resetFilter() {
   if (filterCircleB) {
     filterCircleB.remove();
   }
+  if (borderA) {
+    borderA.remove();
+  }
+  if (borderB) {
+    borderB.remove();
+  }
   filterCircleA = null;
   filterCircleB = null;
+  borderA = null;
+  borderB = null;
   svg.select("#locationA").remove();
   svg.select("#locationB").remove();
   svg.selectAll("circle.Restaurant").style("fill", d => getRiskColor(d));
-  selection = 'A';
+  selection = "A";
   filteredData = [];
   $("#filter-range-a").text("");
   $("#filter-range-b").text("");
@@ -402,16 +492,16 @@ function resetFilter() {
 // and returns the distance between them as the crow flies (in km)
 function calcCrow(lat1, lon1, lat2, lon2)
 {
-  var R = 6371; // km
-  var dLat = toRad(lat2-lat1);
-  var dLon = toRad(lon2-lon1);
-  var lat1 = toRad(lat1);
-  var lat2 = toRad(lat2);
+  const R = 6371; // km
+  const dLat = toRad(lat2-lat1);
+  const dLon = toRad(lon2-lon1);
+  const rlat1 = toRad(lat1);
+  const rlat2 = toRad(lat2);
 
-  var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  var d = R * c;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(rlat1) * Math.cos(rlat2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const d = R * c;
   return d;
 }
 
@@ -444,10 +534,10 @@ function resetDataCount() {
 
 function onResetMap() {
   // flip all checkboxes to be selected
-  $('#Checkbox_No_Risk_Data').prop('checked', true);
-  $('#Checkbox_Low_Risk').prop('checked', true);
-  $('#Checkbox_Moderate_Risk').prop('checked', true);
-  $('#Checkbox_High_Risk').prop('checked', true);
+  $("#Checkbox_No_Risk_Data").prop("checked", true);
+  $("#Checkbox_Low_Risk").prop("checked", true);
+  $("#Checkbox_Moderate_Risk").prop("checked", true);
+  $("#Checkbox_High_Risk").prop("checked", true);
   const selection = document.getElementsByClassName("Restaurant");
   render(selection); // render all
   resetFilter();

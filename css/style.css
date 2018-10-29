@@ -1,8 +1,3 @@
-#circleA, #circleB {
-  stroke          : gray;
-  stroke-width    : 1px;
-}
-
 #circleA {
   fill            : purple;
   opacity         : 0.1;
@@ -11,6 +6,14 @@
 #circleB {
   fill            : yellow;
   opacity         : 0.1;
+}
+
+.circle-border {
+  cursor          : ew-resize;
+  fill            : none;
+  opacity         : 0.5;
+  stroke          : gray;
+  stroke-width    : 2px;
 }
 
 .pageTitle {
