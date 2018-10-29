@@ -138,7 +138,7 @@ init();
 
 // Add restaurant points and callbacks for filtering by risk
 function init() {
-  d3.csv("/data/restaurant_scores.csv").then(function(data) {
+  d3.csv("/data/restaurant_scores_processed.csv").then(function(data) {
     csvData = data;
     svg.selectAll("circle")
     .data(data)
